@@ -12,7 +12,7 @@
 
 #include <GL/glut.h>
 #include <stdio.h>
-
+#include <math.h>
 
 // texturaren informazioa
 
@@ -59,35 +59,66 @@ tri.p1=pu1;
 tri.p2=pu2;
 tri.p3=pu3;
 
-float a,bb,c;
-
-for(a=0;a<=1;a+=0.001)
-    for(bb=0;bb<=1;bb+=0.001){
-        if(a+bb<1){
-            c=1-a+bb;
-        }else if( a+bb==1){
-            c=0;
-        }else{
-            break;
+/* Para hacer un círculo/donut centrado
+int x,y,bb;
+for(x=0;x<500;x++)
+    for(y=0;y<500;y++){
+        bb=(int)sqrt((x-250)*(x-250)+(y-250)*(y-250));
+        if(bb<=140 && bb>=100){
+            colorv=color_textura(0.2,0.3);
+            r=colorv[0];
+            g=colorv[1];
+            b=colorv[2];
+            glBegin(GL_POINTS);
+            glColor3ub(r,g,b);
+            glVertex3f(x,y,0.);
+            glEnd();
         }
-        
-        int x,y;
+    }*/
 
-        x=(int)(tri.p1.x*a+ tri.p2.x*bb+tri.p3.x*c);       
-        y=(int)(tri.p1.y*a+ tri.p2.y*bb+tri.p3.y*c);   
+punto arriba, abajo, medio,izq dcha;
 
-        colorv=color_textura(0.2,0.3);
-        r=colorv[0];
-        g=colorv[1];
-        b=colorv[2];
-        glBegin(GL_POINTS);
-        glColor3ub(r,g,b);
-        glVertex3f(x,y,0.);
-        glEnd();
-        
+if(tri.p1.y>tri.p2.y){
+    if(tri.p1.y>tri.p3.y){
+        arriba=tri.p1.y;
+        if(tri.p2.y>tri.p3.y){
+           abajo=tri.p3.y; 
+           medio=tri.p2.y;
+        }else{
+           abajo=tri.p2.y; 
+           medio=tri.p3.y;
+        }
+    }else{
+        medio=tri.p1.y;
+        arriba=tri.p3.y;
+        abajo=tri.p2.y;
     }
-    
+}else{
+    if(tri.p2.y>tri.p3.y){
+        arriba=tri.p2.y;
+        if(tri.p3.y>tri.p1.y){
+            medio=tri.p3.y;
+            abajo=tri.p1.y;
+        }else{
+            medio=tri.p1.y;
+            abajo=tri.p3.y;
+        }
+    }else{
+        abajo=tri.p1.y;
+        medio=tri.p2.y;
+        arriba=tri.p3.y;
+    }
+}
 
+if(abajo.x<medio.x){
+    izq=abajo;
+    dcha=medio;
+}else{
+    izq=medio;
+    dcha=abajo;
+}
+
+float e1=0.0,e2=0.0,e3=0.0, m1=((arriba.y-medio.y)/(arriba.x-medio.x)), m2=((arriba.y-abajo.y)/(arriba.x-abajo.x)),m3=((izq.y-dcha.y)/(izq.x-dcha.x));
 
 /*for (i=0;i<500;i++)
     for (j=0;j<500;j++)
