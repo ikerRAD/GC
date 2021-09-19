@@ -76,37 +76,37 @@ for(x=0;x<500;x++)
         }
     }*/
 
-punto arriba, abajo, medio,izq dcha;
+punto arriba, abajo, medio,izq, dcha;
 
 if(tri.p1.y>tri.p2.y){
     if(tri.p1.y>tri.p3.y){
-        arriba=tri.p1.y;
+        arriba=tri.p1;
         if(tri.p2.y>tri.p3.y){
-           abajo=tri.p3.y; 
-           medio=tri.p2.y;
+           abajo=tri.p3;
+           medio=tri.p2;
         }else{
-           abajo=tri.p2.y; 
-           medio=tri.p3.y;
+           abajo=tri.p2;
+           medio=tri.p3;
         }
     }else{
-        medio=tri.p1.y;
-        arriba=tri.p3.y;
-        abajo=tri.p2.y;
+        medio=tri.p1;
+        arriba=tri.p3;
+        abajo=tri.p2;
     }
 }else{
     if(tri.p2.y>tri.p3.y){
-        arriba=tri.p2.y;
+        arriba=tri.p2;
         if(tri.p3.y>tri.p1.y){
-            medio=tri.p3.y;
-            abajo=tri.p1.y;
+            medio=tri.p3;
+            abajo=tri.p1;
         }else{
-            medio=tri.p1.y;
-            abajo=tri.p3.y;
+            medio=tri.p1;
+            abajo=tri.p3;
         }
     }else{
-        abajo=tri.p1.y;
-        medio=tri.p2.y;
-        arriba=tri.p3.y;
+        abajo=tri.p1;
+        medio=tri.p2;
+        arriba=tri.p3;
     }
 }
 
