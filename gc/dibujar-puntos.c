@@ -20,7 +20,7 @@
 
 extern void load_ppm(char *file, unsigned char **bufferptr, int *dimxptr, int * dimyptr);
 unsigned char *bufferra;
-int dimx,dimy,num_triangles,indice=0;
+int dimx,dimy,num_triangles,indice;
 hiruki *triangulosptr;
 
 unsigned char * color_textura(float u, float v)
@@ -54,84 +54,57 @@ static void dibujarSegmento(int x1,int x2,int y){
     }
 }
 
-static void marraztu(void)
-{
-    float u,v;
-    float i,j;
-    unsigned char* colorv;
-    unsigned char r,g,b;
-
-// borramos lo que haya...
-    glClear( GL_COLOR_BUFFER_BIT );
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, 500.0, 0.0, 500.0,-250.0, 250.0);
-
-// por ahora dibujamos todos los pixels de la ventana de 500x500 con el color que devuelve la función color_textura
-// pero hay que llamar a la función que dibuja un triangulo con la textura mapeada:
-
-//dibujar_triangulo(triangulosptr[indice]);
-    hiruki tri;
-    punto pu1,pu2,pu3;
-    pu1.x=0;
-    pu1.y=0;
-    pu2.x=400;
-    pu2.y=400;
-    pu3.x=300;
-    pu3.y=100;
-    tri.p1=pu1;
-    tri.p2=pu2;
-    tri.p3=pu3;
-
-/* Para hacer un círculo/donut centrado
-int x,y,bb;
-for(x=0;x<500;x++)
-    for(y=0;y<500;y++){
-        bb=(int)sqrt((x-250)*(x-250)+(y-250)*(y-250));
-        if(bb<=140 && bb>=100){
-            colorv=color_textura(0.2,0.3);
-            r=colorv[0];
-            g=colorv[1];
-            b=colorv[2];
-            glBegin(GL_POINTS);
-            glColor3ub(r,g,b);
-            glVertex3f(x,y,0.);
-            glEnd();
-        }
-    }*/
-
-    punto arriba, abajo, medio;
-
-    if(tri.p1.y>tri.p2.y){
-        if(tri.p1.y>tri.p3.y){
-            arriba=tri.p1;
-            if(tri.p2.y>tri.p3.y){
-                abajo=tri.p3;
-                medio=tri.p2;
+static void dibujar_triangulo_algebra(){
+    punto A=triangulosptr[indice].p1,B=triangulosptr[indice].p2,C=triangulosptr[indice].p3;
+    float x,y,alfa,beta,gamma,tol=0.00001;//factor de tolerancia
+    for(alfa=0.0;alfa<=1.0+tol;alfa+=0.001)
+        for(beta=0.0;beta<=1.0+tol;beta+=0.001){
+            if(alfa+beta<1-tol){
+                gamma=1-(alfa+beta);
             }else{
-                abajo=tri.p2;
-                medio=tri.p3;
+                gamma=0;
+                if(alfa+beta>1+tol){
+                    break;
+                }
+            }
+            x=alfa*A.x+beta*B.x+gamma*C.x;
+            y=alfa*A.y+beta*B.y+gamma*C.y;
+            dibuja(x,y);
+        }
+}
+
+static void dibujar_triangulo(){
+    punto arriba, abajo, medio;
+    
+    if((triangulosptr+indice)->p1.y>(triangulosptr+indice)->p2.y){
+        if((triangulosptr+indice)->p1.y>(triangulosptr+indice)->p3.y){
+            arriba=(triangulosptr+indice)->p1;
+            if((triangulosptr+indice)->p2.y>(triangulosptr+indice)->p3.y){
+                abajo=(triangulosptr+indice)->p3;
+                medio=(triangulosptr+indice)->p2;
+            }else{
+                abajo=(triangulosptr+indice)->p2;
+                medio=(triangulosptr+indice)->p3;
             }
         }else{
-            medio=tri.p1;
-            arriba=tri.p3;
-            abajo=tri.p2;
+            medio=(triangulosptr+indice)->p1;
+            arriba=(triangulosptr+indice)->p3;
+            abajo=(triangulosptr+indice)->p2;
         }
     }else{
-        if(tri.p2.y>tri.p3.y){
-            arriba=tri.p2;
-            if(tri.p3.y>tri.p1.y){
-                medio=tri.p3;
-                abajo=tri.p1;
+        if((triangulosptr+indice)->p2.y>(triangulosptr+indice)->p3.y){
+            arriba=(triangulosptr+indice)->p2;
+            if((triangulosptr+indice)->p3.y>(triangulosptr+indice)->p1.y){
+                medio=(triangulosptr+indice)->p3;
+                abajo=(triangulosptr+indice)->p1;
             }else{
-                medio=tri.p1;
-                abajo=tri.p3;
+                medio=(triangulosptr+indice)->p1;
+                abajo=(triangulosptr+indice)->p3;
             }
         }else{
-            abajo=tri.p1;
-            medio=tri.p2;
-            arriba=tri.p3;
+            abajo=(triangulosptr+indice)->p1;
+            medio=(triangulosptr+indice)->p2;
+            arriba=(triangulosptr+indice)->p3;
         }
     }
 
@@ -232,21 +205,27 @@ for(x=0;x<500;x++)
             dibujarSegmento(x3,x2,yi);
         }
     }
+}
 
-/*for (i=0;i<500;i++)
-    for (j=0;j<500;j++)
-        {
-        u = i/500.0;
-        v = j/500.0;
-        colorv=  color_textura(u, v); // si esta función es correcta se ve la foto en la ventana
-        r= colorv[0];
-        g=colorv[1];
-        b=colorv[2];
-	glBegin( GL_POINTS );
-	glColor3ub(r,g,b);
-	glVertex3f(i,j,0.);
-	glEnd();
-	}*/
+static void marraztu(void)
+{
+    float u,v;
+    float i,j;
+    unsigned char* colorv;
+    unsigned char r,g,b;
+
+// borramos lo que haya...
+    glClear( GL_COLOR_BUFFER_BIT );
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, 500.0, 0.0, 500.0,-250.0, 250.0);
+
+// por ahora dibujamos todos los pixels de la ventana de 500x500 con el color que devuelve la función color_textura
+// pero hay que llamar a la función que dibuja un triangulo con la textura mapeada:
+
+    //dibujar_triangulo();
+    dibujar_triangulo_algebra();
+    
     glFlush();
 }
 
@@ -257,6 +236,7 @@ static void teklatua (unsigned char key, int x, int y)
     switch(key)
     {
         case 13:
+            
             printf ("ENTER: que hay que dibujar el siguiente triángulo.\n");
             indice++;
             if(indice == num_triangles){
@@ -272,23 +252,6 @@ static void teklatua (unsigned char key, int x, int y)
 
 // The screen must be drawn to show the new triangle
     glutPostRedisplay();
-}
-
-void dibujar_triangulo(hiruki triangulo){
-/*for (i=0;i<500;i++)
-    for (j=0;j<500;j++)
-        {
-        u = i/500.0;
-        v = j/500.0;
-        colorv=  color_textura(u, v); // si esta función es correcta se ve la foto en la ventana
-        r= colorv[0];
-        g=colorv[1];
-        b=colorv[2];
-	glBegin( GL_POINTS );
-	glColor3ub(r,g,b);
-	glVertex3f(i,j,0.);
-	glEnd();
-	}*/
 }
 
 
