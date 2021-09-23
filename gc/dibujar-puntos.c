@@ -25,38 +25,33 @@ hiruki *triangulosptr;
 
 unsigned char * color_textura(float u, float v)
 {
-/* debe devolver un puntero al pixel adecuado, no al primero!! */
-    return(bufferra);
+    /* debe devolver un puntero al pixel adecuado, no al primero!! */
+    int j, i, pos;
+    j = u * dimx;
+    i = (1-v)*dimy;
+    pos = 3*dimx*i+3*j;//el 3 ya que cada elemento contiene 3, r,g y b
+
+    return(bufferra + pos);
 }
 
-static void dibuja(int x,int y){
+static void dibuja(punto *dibujo){
     unsigned char* colorv;
     unsigned char r,g,b;
-    colorv=color_textura(0.2,0.3);
+    colorv=color_textura(dibujo->u,dibujo->v);
     r=colorv[0];
     g=colorv[1];
     b=colorv[2];
     glBegin(GL_POINTS);
     glColor3ub(r,g,b);
-    glVertex3f(x,y,0.);
+    glVertex3f(dibujo->x,dibujo->y,0.);
     glEnd();
 }
 
-static void dibujarSegmento(int x1,int x2,int y){
-    int izq=x2,dcha=x1;
-    if(x1<x2){
-        izq=x1;
-        dcha=x2;
-    }
-    int i;
-    for(i=izq;i<=dcha;i++){
-        dibuja(i,y);
-    }
-}
-
-static void dibujar_triangulo_algebra(){
+static void dibujar_triangulo(){
     punto A=triangulosptr[indice].p1,B=triangulosptr[indice].p2,C=triangulosptr[indice].p3;
-    float x,y,alfa,beta,gamma,tol=0.00001;//factor de tolerancia
+    punto *pintar=malloc(sizeof (punto));
+    float x, y, alfa, beta, gamma, tol=0.00001;//factor de tolerancia
+    int xx=-1, yy=-1;//variables para guardar el último punto dibujado
     for(alfa=0.0;alfa<=1.0+tol;alfa+=0.001)
         for(beta=0.0;beta<=1.0+tol;beta+=0.001){
             if(alfa+beta<1-tol){
@@ -69,142 +64,18 @@ static void dibujar_triangulo_algebra(){
             }
             x=alfa*A.x+beta*B.x+gamma*C.x;
             y=alfa*A.y+beta*B.y+gamma*C.y;
-            dibuja(x,y);
+
+
+            if(((((int)x)-xx)!=0)||((((int)y)-yy)!=0)) {//comprobamos que este punto no ha sido dibujado previamente debido al lento incremento de alfa, beta y gamma
+                pintar->x=x;
+                pintar->y=y;
+                pintar->u=alfa*A.u+beta*B.u+gamma*C.u;//evitamos calcular estas coordenadas siempre que se calculan x e y
+                pintar->v=alfa*A.v+beta*B.v+gamma*C.v;
+                dibuja(pintar);
+                xx=(int)x;
+                yy=(int)y;
+            }
         }
-}
-
-static void dibujar_triangulo(){
-    punto arriba, abajo, medio;
-    
-    if((triangulosptr+indice)->p1.y>(triangulosptr+indice)->p2.y){
-        if((triangulosptr+indice)->p1.y>(triangulosptr+indice)->p3.y){
-            arriba=(triangulosptr+indice)->p1;
-            if((triangulosptr+indice)->p2.y>(triangulosptr+indice)->p3.y){
-                abajo=(triangulosptr+indice)->p3;
-                medio=(triangulosptr+indice)->p2;
-            }else{
-                abajo=(triangulosptr+indice)->p2;
-                medio=(triangulosptr+indice)->p3;
-            }
-        }else{
-            medio=(triangulosptr+indice)->p1;
-            arriba=(triangulosptr+indice)->p3;
-            abajo=(triangulosptr+indice)->p2;
-        }
-    }else{
-        if((triangulosptr+indice)->p2.y>(triangulosptr+indice)->p3.y){
-            arriba=(triangulosptr+indice)->p2;
-            if((triangulosptr+indice)->p3.y>(triangulosptr+indice)->p1.y){
-                medio=(triangulosptr+indice)->p3;
-                abajo=(triangulosptr+indice)->p1;
-            }else{
-                medio=(triangulosptr+indice)->p1;
-                abajo=(triangulosptr+indice)->p3;
-            }
-        }else{
-            abajo=(triangulosptr+indice)->p1;
-            medio=(triangulosptr+indice)->p2;
-            arriba=(triangulosptr+indice)->p3;
-        }
-    }
-
-    float e1=0.0,e2=0.0,e3=0.0, m1, m2,m3=((medio.y-abajo.y)/(medio.x-abajo.x));
-
-    //Usamos pendientes invertidas
-    if((arriba.y-medio.y)==0){
-        m1=-1000;//número considerado infinito en este caso
-    }else{
-        m1=((arriba.x-medio.x)/(arriba.y-medio.y));
-    }
-
-    if((arriba.y-abajo.y)==0){
-        m2=-1000;//número considerado infinito en este caso
-    }else {
-        m2 = ((arriba.x - abajo.x) / (arriba.y - abajo.y));
-    }
-
-    if((medio.y-abajo.y)==0){
-        m3=-1000;//número considerado infinito en este caso
-    }else{
-        m3=((medio.x-abajo.x)/(medio.y-abajo.y));
-    }
-
-    int yi,x1=arriba.x,x2=arriba.x,x3=medio.x;
-    dibuja(arriba.x,arriba.y);
-    dibuja(abajo.x,abajo.y);
-    if(m1==-1000){//tienen la misma y
-        //dibujo el segmento
-        dibujarSegmento(arriba.x,medio.x,arriba.y);
-
-
-
-    }else{
-        for(yi=arriba.y-1;yi>medio.y;yi--){
-            e1+=m1;
-            e2+=m2;
-            if(e1<=-1){//para saber si va a la izquierda o derecha
-                while(e1<=-1){
-                    e1++;
-                    x1++;
-                }
-            }else if(e1>=1){
-                while(e1>=1){
-                    e1--;
-                    x1--;
-                }
-            }
-
-            if(e2<=-1){
-                while(e2<=-1){
-                    e2++;
-                    x2++;
-                }
-            }else if(e2>=1){
-                while(e2>=1){
-                    e2--;
-                    x2--;
-                }
-            }
-            //dibujo el segmento x1,x2,yi
-            dibujarSegmento(x1,x2,yi);
-        }
-    }
-    if(m3==-1000){
-        //dibujo segmento
-        dibujarSegmento(medio.x,abajo.x,medio.y);
-    }else{
-        //dibujo segmento medio.x, x2, medio.y
-        dibujarSegmento(medio.x,x2,medio.y);
-        for(yi=medio.y-1;yi>abajo.y;yi--){
-            e2+=m2;
-            e3+=m3;
-            if(e2<=-1){//para saber si va a la izquierda o derecha
-                while(e2<=-1){
-                    e2++;
-                    x2++;
-                }
-            }else if(e2>=1){
-                while(e2>=1){
-                    e2--;
-                    x2--;
-                }
-            }
-
-            if(e3<=-1){
-                while(e3<=-1){
-                    e3++;
-                    x3++;
-                }
-            }else if(e3>=1){
-                while(e3>=1){
-                    e3--;
-                    x3--;
-                }
-            }
-            //dibujo el segmento x3,x2,yi
-            dibujarSegmento(x3,x2,yi);
-        }
-    }
 }
 
 static void marraztu(void)
@@ -224,7 +95,7 @@ static void marraztu(void)
 // pero hay que llamar a la función que dibuja un triangulo con la textura mapeada:
 
     //dibujar_triangulo();
-    dibujar_triangulo_algebra();
+    dibujar_triangulo();
     
     glFlush();
 }
