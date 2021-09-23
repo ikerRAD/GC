@@ -20,7 +20,7 @@
 
 extern void load_ppm(char *file, unsigned char **bufferptr, int *dimxptr, int * dimyptr);
 unsigned char *bufferra;
-int dimx,dimy,num_triangles;
+int dimx,dimy,num_triangles,indice=0;
 hiruki *triangulosptr;
 
 unsigned char * color_textura(float u, float v)
@@ -258,10 +258,10 @@ static void teklatua (unsigned char key, int x, int y)
     {
         case 13:
             printf ("ENTER: que hay que dibujar el siguiente triángulo.\n");
-            /* hacer algo para que se dibuje el siguiente triangulo */
-            /*
-            indice ++;  // pero si es el último? hay que controlarlo!
-            */
+            indice++;
+            if(indice == num_triangles){
+                indice=0;
+            }
             break;
         case 27:  // <ESC>
             exit( 0 );
